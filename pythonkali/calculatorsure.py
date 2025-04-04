@@ -1,7 +1,15 @@
-#!/usr/bin/env python3
+import os
+import time
+
+# Clear the terminal screen
+def clear_screen():
+    os.system('clear')  # Use 'cls' if you're on Windows
+
+clear_screen()
 
 def main():
-    print("Simple Calculator in Kali Linux")
+    print("Simple Calculator")
+
     a = int(input("Enter first number: "))
     b = int(input("Enter second number: "))
 
@@ -27,6 +35,9 @@ def main():
     else:
         print("Invalid choice! Please select a valid option.")
 
-
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting the program.")
+        exit()
