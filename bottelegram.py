@@ -17,7 +17,7 @@ async def help(update: Update, context: CallbackContext):
     await update.message.reply_text("Commands:\n/start - Start the bot\n/help - Show available commands")
 
     keyboard = [
-        [InlineKeyboardButton('Option 1', callback_data='option_1')],
+            [InlineKeyboardButton('Option 1', callback_data='option_1')],
         [InlineKeyboardButton('Option 2', callback_data='option_2')]
     ]
 
