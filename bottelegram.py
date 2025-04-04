@@ -12,6 +12,7 @@ async def hello(update: Update, context: CallbackContext):
     await update.message.reply_text("Hello! I am good, just chilling.")
 
 
+
 async def help(update: Update, context: CallbackContext):
     await update.message.reply_text("Commands:\n/start - Start the bot\n/help - Show available commands")
 
