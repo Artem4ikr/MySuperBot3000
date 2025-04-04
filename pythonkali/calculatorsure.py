@@ -23,7 +23,7 @@ def main():
 
     if choice == '1':
         print(f"Result: {a} + {b} = {a + b}")
-    elif choice == '2':
+    elif choice == '2':f
         print(f"Result: {a} - {b} = {a - b}")
     elif choice == '3':
         print(f"Result: {a} * {b} = {a * b}")
