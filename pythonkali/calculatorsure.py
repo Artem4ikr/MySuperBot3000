@@ -1,13 +1,14 @@
 import os
 import time
 
-# Clear the terminal screen
+
 def clear_screen():
-    os.system('clear')  # Use 'cls' if you're on Windows
+    os.system('clear')
 
 clear_screen()
 
 def main():
+    print('press ctrl + c for exit')
     print("Simple Calculator")
 
     a = int(input("Enter first number: "))
