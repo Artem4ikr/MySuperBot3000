@@ -3,9 +3,14 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 TOKEN = "7742693696:AAEhuQEPL1rvlYsQreCyLuctyjov1kFCR_M"
 
+a = int(input("enter a num"))
+
+async def secret(update: Update, context: CallbackContext):
+    await update.message.reply_text(a)
 
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Hello! I'm your bot. Use /help to see available commands.")
+
 
 
 async def hello(update: Update, context: CallbackContext):
@@ -68,6 +73,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help))
+    app.add_handler(CommandHandler("secret", secret))
     app.add_handler(CommandHandler("hello", hello))
     app.add_handler(CommandHandler("animals", animals))
 
