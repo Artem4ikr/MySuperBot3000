@@ -3,7 +3,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 TOKEN = "7742693696:AAEhuQEPL1rvlYsQreCyLuctyjov1kFCR_M"
 
-a = int(input("enter a num"))
+a = int(input("enter a secret  num: "))
+
 
 async def secret(update: Update, context: CallbackContext):
     await update.message.reply_text(a)
@@ -80,6 +81,8 @@ def main():
     app.add_handler(CallbackQueryHandler(button_callback))
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+
 
     print("Bot is running...")
     app.run_polling()
