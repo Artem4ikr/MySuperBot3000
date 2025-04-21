@@ -11,21 +11,17 @@ from termcolor import colored  # Importing termcolor for colored output
 
 # Function to display a symbolic ASCII art made of fewer symbols
 def display_hacking_drawing():
-    drawing = '''
-        ##########    ##########    ##########
-       ##      ##   ##      ##   ##      ##
-      ##        ##  ##      ##  ##        ##
-      ##  ##    ##  ##      ##  ##   #### ##
-      ##  ##    ##  ##      ##  ##   ##    ##
-      ##  ##    ##  ##      ##  ##    ######
-       ##      ##   ##      ##   ##    ##
-        ##########    ##########    ######
+    print(colored(r"""
+    ██╗  ██╗██╗   ██╗██████╗ ██████╗  █████╗ 
+    ██║  ██║██║   ██║██╔══██╗██╔══██╗██╔══██╗   
+    ███████║██║   ██║██║  ██║██████╔╝███████║
+    ██╔══██║██║   ██║██║  ██║██╔═══╝ ██╔══██║
+    ██║  ██║╚██████╔╝██████╔╝██║     ██║  ██║
+    ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝
+     ███ HYDRA - MENU / ULTIMATE / TOOL ███
+    """, 'cyan', attrs=['bold']))
 
-        Welcome to the Digital Hacking Terminal
-    '''
-    # Adding colors to the ASCII Art drawing using termcolor
-    print(colored(drawing, 'green'))  # Using green to color the symbols
-    print(colored("Make sure you have permission before testing any tool.", 'red'))
+    print(colored("!have FUN!", 'red'))
 
 
 # Function 1: Basic Port Scanner
