@@ -1,0 +1,8 @@
+'s'
+'d'
+'s'
+'d'
+Key.backspace
+Key.backspace
+Key.backspace
+Key.backspace
